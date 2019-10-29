@@ -1,0 +1,13 @@
+{{- if .Values.explorerdb.persistence.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "hf-explorer.fullname" . }}-pg-pvc
+spec:
+  accessModes:
+    - {{ .Values.explorerdb.persistence.accessMode }}
+  resources:
+    requests:
+      storage: {{ .Values.explorerdb.persistence.size }}
+  storageClassName: {{ .Values.explorerdb.persistence.storageClass }}
+{{- end }}

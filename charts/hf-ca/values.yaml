@@ -1,0 +1,85 @@
+# Default values for hf-ca.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+image:
+  repository: hyperledger/fabric-ca
+  tag: 1.4.2
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+service:
+  type: ClusterIP
+  port: 7054
+
+ingress:
+  enabled: false
+  annotations: {}
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  hosts:
+    - host: hyperledger.fabric-ca.local
+      paths: []
+
+  tls: []
+  #  - secretName: fabric-ca-server-tls
+  #    hosts:
+  #      - hyperledger.fabric-ca.local
+
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+ca:
+  adminName: "admin"  # ca server admin name
+  adminPwd: "123456"  # ca server admin password
+  caName: "fabric-ca-server"   # ca name 
+  secret:
+    cert: ""
+    key: ""
+  imdca:
+    enabled: false 
+    url: ""  # rootca url, as 'http://admin:adminpw@fabric-ca-server:7054'
+  allowRemoveAffiliation: true 
+  allowRemoveIdentity: true 
+
+persistence:
+  enabled: false 
+  storageClass: ""
+  accessMode: ""
+  size: ""
+
+mysql:
+  enabled: false  # if set true, pg.enabled should be false 
+  image: "mysql"
+  tag: "5.7.20"  # 5.7 or later
+  port: 3306 
+  database: "fabric_ca"  # create database when server start
+  dbpwd: ""
+
+pg:
+  enabled: false  # if set true, mysql.enabled should be false 
+  image: "postgres"
+  tag: ""  # 9.5.5 or later
+  port: 5432
+  database: "fabric_ca" 
+  dbpwd: ""
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}

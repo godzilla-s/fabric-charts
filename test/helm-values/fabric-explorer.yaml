@@ -1,0 +1,82 @@
+# Default values for hf-explorer.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+image:
+  repository: hyperledger/explorer
+  tag: latest
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: "fabric-explorer"
+
+service:
+  type: ClusterIP
+  port: 8090
+
+ingress:
+  enabled: true
+  annotations: {}
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  hosts:
+    - host: hyperledger.explorer.local
+      paths: 
+        - /
+
+  tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
+
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+secrets:
+  networkConfig: "fabric-explore-config"  # fabric network configuration file
+  createScript: "create-script"
+  orgSecrets: 
+    org1:
+      adminKey: "org1-admin-key"   # org's admin key file
+      adminCert: "org1-admin-cert"  # org's admin certificate
+      tlsCaCert: "org1-tlsca-cert"
+    org2:
+      adminKey: "org2-admin-key"
+      adminCert: "org2-admin-cert"
+      tlsCaCert: "org2-tlsca-cert"
+
+persistence:
+  enabled: false
+  storageClass: "crypto-pv"
+  accessMode: "ReadOnlyMany"
+  size: "3Gi"
+
+explorerdb:
+  image: "hyperledger/explorer-db"
+  tag: latest
+  database: fabricexplorer
+  username: hppoc
+  passwd: password
+  persistence:
+    enabled: false
+    storeClass: ""
+    accessMode: "ReadWriteMany"
+    size: "2Gi"
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}

@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "hf-explorer.fullname" . }}-cm
+data:
+  DATABASE_HOST: {{ include "hf-explorer.fullname" . }}-pg
+  DATABASE_DATABASE: {{ .Values.explorerdb.database | quote }}
+  DATABASE_USERNAME: {{ .Values.explorerdb.username | quote }}
+  DATABASE_PASSWD: {{ .Values.explorerdb.passwd | quote }}
+  DISCOVERY_AS_LOCALHOST: "false"
+  config-file: |
+    {
+        "network-configs": {
+            "first-network": {
+                "name": "firstnetwork",
+                "profile": "./connection-profile/network.json"}
+            },
+        "license": "Apache-2.0"
+    }
+  

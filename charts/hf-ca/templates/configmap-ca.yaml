@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: ConfigMap 
+metadata:
+  name: {{ include "hf-ca.fullname" . }}-ca-cm 
+data:
+  FABRIC_CA_HOME: "/etc/hyperledger/fabric-ca-server"
+  FABRIC_CA_SERVER_CA_NAME: {{ .Values.ca.caName | quote }}
+  FABRIC_CA_SERVER_CA_CERTFILE: {{ .Values.ca.secret.cert | quote }}
+  FABRIC_CA_SERVER_CA_KEYFILE: {{ .Values.ca.secret.key | quote }}
+  FABRIC_CA_SERVER_CFG_AFFILIATIONS_ALLOWREMOVE: {{ .Values.ca.allowRemoveAffiliation | quote }}
+  FABRIC_CA_SERVER_CFG_IDENTITIES_ALLOWREMOVE: {{ .Values.ca.allowRemoveIdentity | quote }}
+  FABRIC_CA_ADMIN_NAME: {{ .Values.ca.adminName | quote }}
+  FABRIC_CA_ADMIN_PASSWD: {{ .Values.ca.adminPwd | quote }}
+  {{- if .Values.ca.imdca.enabled }}
+  FABRIC_CA_IMD_CA_URL: {{ .Values.ca.imdca.url }}
+  {{- end }}
+  # mysql setting
+  {{- if .Values.mysql.enabled }}
+  FABRIC_CA_SERVER_DB_TYPE: "mysql"
+  FABRIC_CA_SERVER_DB_DATASOURCE: "root:{{ .Values.mysql.dbpwd }}@tcp({{ include "hf-ca.fullname" . }}-mysql:3306)/{{ .Values.mysql.database }}?parseTime=true"
+  {{- end }}
+  # postgres setting 
+  {{- if .Values.pg.enabled }}
+  FABRIC_CA_SERVER_DB_TYPE: "postgres"
+  FABRIC_CA_SERVER_DB_DATASOURCE: "host={{ include "hf-ca.fullname" . }}-mysql port=5432 user=Username password={{ .Values.pg.dbpwd }} dbname={{ .Values.pg.database }} sslmode=verify-full"
+  {{- end }}

@@ -1,0 +1,15 @@
+{{- if .Values.orderer.persistence.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "hf-orderer.fullname" . }}-orderer-pvc
+  labels:
+{{ include "labels.standard" . | indent 4 }}
+spec:
+  accessModes:
+    - {{ .Values.orderer.persistence.accessMode }}
+  resources:
+    requests:
+      storage: {{ .Values.orderer.persistence.size }}
+  storageClassName: {{ .Values.orderer.persistence.storageClass }}
+{{- end }}

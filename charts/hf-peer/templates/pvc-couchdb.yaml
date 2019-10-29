@@ -1,0 +1,15 @@
+{{- if .Values.couchdb.enabled }}
+{{- if .Values.couchdb.persistence.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "hf-peer.fullname" . }}-couchdb-pvc 
+spec:
+  accessModes:
+    - {{ .Values.peer.persistence.accessMode }}
+  resources:
+    requests:
+      storage: {{ .Values.peer.persistence.size }}
+  storageClassName: {{ .Values.peer.persistence.storageClass }}
+{{- end }}
+{{- end }}

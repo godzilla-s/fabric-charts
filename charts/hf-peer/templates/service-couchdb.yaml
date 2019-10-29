@@ -1,0 +1,18 @@
+{{- if .Values.couchdb.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "hf-peer.fullname" . }}-couchdb
+  labels:
+{{ include "hf-peer.labels" . | indent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.portCouchDB }}
+      targetPort: 5984
+      protocol: TCP
+      name: couchdb
+  selector:
+    app.kubernetes.io/name: {{ include "hf-peer.name" . }}-couchdb
+    app.kubernetes.io/instance: {{ .Release.Name }}-couchdb
+{{- end }}

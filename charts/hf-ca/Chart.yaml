@@ -1,0 +1,7 @@
+apiVersion: v1
+appVersion: "1.0"
+description: Hyperledger Fabric chart for CA
+name: hf-ca
+version: 1.0.0
+keyword:
+  fabric-ca

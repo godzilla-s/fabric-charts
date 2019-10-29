@@ -1,0 +1,35 @@
+{{- if .Values.couchdb.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "hf-peer.fullname" . }}-couchdb
+  labels:
+{{ include "hf-peer.labels" . | indent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "hf-peer.name" . }}-couchdb
+      app.kubernetes.io/instance: {{ .Release.Name }}-couchdb
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "hf-peer.name" . }}-couchdb
+        app.kubernetes.io/instance: {{ .Release.Name }}-couchdb
+    spec:
+      volumes:
+      {{- if .Values.couchdb.persistence.enabled }}
+        - name: data-persistent-vol
+          persistentVolumeClaim:
+            claimName: {{ include "hf-peer.fullname" . }}-couchdb-pvc
+      {{- end }}
+      containers:
+        - name: {{ .Release.Name }}-couchdb
+          image: {{ .Values.couchdb.image }}:{{ .Values.couchdb.tag }}
+          imagePullPolicy: IfNotPresent
+          volumeMounts:
+          {{- if .Values.couchdb.persistence.enabled }}
+            - mountPath: /opt/couchdb/data
+              name: data-persistent-vol
+          {{- end }}
+{{- end }}

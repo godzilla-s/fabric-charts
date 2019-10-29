@@ -1,0 +1,127 @@
+# if start client container for peer
+{{- if .Values.client.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "hf-peer.fullname" . }}-client
+  labels:
+{{ include "hf-peer.labels" . | indent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "hf-peer.name" . }}-client
+      app.kubernetes.io/instance: {{ .Release.Name }}-client
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "hf-peer.name" . }}-client
+        app.kubernetes.io/instance: {{ .Release.Name }}-client
+    spec:
+      volumes:
+      {{- if .Values.client.persistence.enabled }}
+        - name: chaincode-src
+          persistentVolumeClaim:
+            claimName: {{ include "hf-peer.fullname" . }}-client-pvc
+      {{- end }}
+      {{- if .Values.client.channeltx }}
+        - name: channel-tx
+          secret:
+            secretName: {{ .Values.client.channeltx }}
+      {{- end }}
+      {{- if .Values.client.secret.userCert }}
+        - name: user-cert
+          secret:
+            secretName: {{ .Values.client.secret.userCert }}
+      {{- end }}
+      {{- if .Values.client.secret.userKey }}
+        - name: user-key
+          secret:
+            secretName: {{ .Values.client.secret.userKey }}
+      {{- end }}
+      {{- if .Values.client.secret.userRootCa }}
+        - name: user-root-ca
+          secret:
+            secretName: {{ .Values.client.secret.userRootCa }}
+      {{- end }}
+      {{- if .Values.client.secret.userRootTlsCa }}
+        - name: user-root-tlsca
+          secret:
+            secretName: {{ .Values.client.secret.userRootTlsCa }}
+      {{- end }}
+      {{- if .Values.client.secret.userAdminCert }}
+        - name: user-admin-cert
+          secret:
+            secretName: {{ .Values.client.secret.userAdminCert }}
+      {{- end }}
+      {{- if .Values.client.secret.userTls }}
+        - name: user-tls-pair
+          secret:
+            secretName: {{ .Values.client.secret.userTls }}
+      {{- end }}
+      {{- if .Values.peer.secret.peerTls }}
+        - name: peer-tls-pair 
+          secret:
+            secretName: {{ .Values.peer.secret.peerTls }}
+      {{- end }}
+      {{- if .Values.peer.secret.peerTlsCa }}
+        - name: peer-tls-crt
+          secret:
+            secretName: {{ .Values.peer.secret.peerTlsCa }}
+      {{- end }}
+      {{- if .Values.client.secret.ordererTlsCa }}
+        - name: orderer-tlsca
+          secret:
+            secretName: {{ .Values.client.secret.ordererTlsCa }}
+      {{- end }}
+      containers:
+      - name: {{ .Release.Name }}-client
+        image: "{{ .Values.client.image }}:{{ .Values.client.tag }}"
+        imagePullPolicy: IfNotPresent 
+        workingDir: /opt/gopath/src/github.com/hyperledger/fabric/peer
+        command: ["sh", "-c", "tail -f /dev/null"]
+        envFrom:
+          - configMapRef:
+              name: {{ .Release.Name }}-client-cm
+        volumeMounts:
+        {{- if .Values.peer.secret.peerTls }}
+          - mountPath: /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/tls/pair
+            name: peer-tls-pair
+        {{- end }}
+        {{- if .Values.peer.secret.peerTlsCa }}
+          - mountPath: /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/tls
+            name: peer-tls-crt 
+        {{- end }}
+        {{- if .Values.client.secret.userCert }}
+          - mountPath: /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/admin/msp/signcerts 
+            name: user-cert
+        {{- end }}
+        {{- if .Values.client.secret.userKey }}
+          - mountPath: /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/admin/msp/keystore 
+            name: user-key
+        {{- end }}
+        {{- if .Values.client.secret.userRootCa }}
+          - mountPath: /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/admin/msp/cacerts 
+            name: user-root-ca
+        {{- end }}
+        {{- if .Values.client.secret.userRootTlsCa }}
+          - mountPath: /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/admin/msp/tlscacerts
+            name: user-root-tlsca
+        {{- end }}
+        {{- if .Values.client.secret.userAdminCert }}
+          - mountPath: /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/admin/msp/admincerts
+            name: user-admin-cert
+        {{- end }}
+        {{- if .Values.client.secret.ordererTlsCa }}
+          - mountPath: /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto
+            name: orderer-tlsca
+        {{- end }}
+        {{- if .Values.client.channeltx }}
+          - mountPath: /opt/gopath/src/github.com/hyperledger/fabric/peer
+            name: channel-tx
+        {{- end }}
+        {{- if .Values.client.persistence.enabled }}
+          - mountPath: /opt/gopath/src/github.com/hyperledger/fabric/peer/chaincode
+            name: chaincode-src
+        {{- end }}
+{{- end }}

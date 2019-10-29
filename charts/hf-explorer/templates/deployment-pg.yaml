@@ -1,0 +1,75 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "hf-explorer.fullname" . }}-pg
+  labels:
+{{ include "hf-explorer.labels" . | indent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "hf-explorer.fullname" . }}-pg
+      app.kubernetes.io/instance: {{ .Release.Name }}-pg
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "hf-explorer.fullname" . }}-pg
+        app.kubernetes.io/instance: {{ .Release.Name }}-pg
+    spec:
+    {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      volumes:
+        - name: create-db-script2
+          configMap:
+            name: {{ include "hf-explorer.fullname" . }}-pg-cm
+            item: 
+              - key: createdb-file
+                path: createdb.sh
+        - name: create-db-script
+          secret:
+            secretName: {{ .Values.secrets.createScript }}
+        {{- if .Values.explorerdb.enabled }}
+        - name: persistent-volume
+          persistentVolumeClaim:
+            claimName: {{ .Values.explorerdb.persistence.storeClass }}
+        {{- end }}
+      containers:
+        - name: {{ .Chart.Name }}-pg
+          image: "{{ .Values.explorerdb.image }}:{{ .Values.explorerdb.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: pg-svc
+              containerPort: 5432
+              protocol: TCP
+          env:
+            - name: HOSTNAME
+              value: {{ include "hf-explorer.fullname" . }}-pg
+            - name: DATABASE_DATABASE
+              value: {{ .Values.explorerdb.database | quote }}
+            - name: DATABASE_USERNAME
+              value: {{ .Values.explorerdb.username | quote }}
+            - name: DATABASE_PASSWORD
+              value: {{ .Values.explorerdb.passwd | quote }}
+          volumeMounts:
+            - mountPath: /docker-entrypoint-initdb.d/
+              name: create-db-script
+            {{- if .Values.explorerdb.persistence.enabled }}
+            - mountPath: /var/lib/postgresql/data
+              name: persistent-volume
+            {{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}

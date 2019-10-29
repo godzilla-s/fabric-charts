@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "hf-explorer.fullname" . }}-pg
+  labels:
+{{ include "hf-explorer.labels" . | indent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.pgPort }}
+      targetPort: 5432
+      protocol: TCP
+      name: pg-svc
+  selector:
+    app.kubernetes.io/name: {{ include "hf-explorer.fullname" . }}-pg
+    app.kubernetes.io/instance: {{ .Release.Name }}-pg

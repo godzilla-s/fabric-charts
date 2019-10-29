@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "hf-orderer.fullname" . }}-orderer-cm
+data:
+  ORDERER_GENERAL_LOGLEVEL: {{ .Values.orderer.logLevel | quote }}
+  ORDERER_GENERAL_LISTENADDRESS: "0.0.0.0"
+  ORDERER_GENERAL_GENESISMETHOD: "file"
+  ORDERER_GENERAL_GENESISFILE: "/var/hyperledger/orderer/genesis.block"
+  ORDERER_GENERAL_LOCALMSPID: {{ .Values.orderer.mspID }}
+  ORDERER_GENERAL_LOCALMSPDIR: "/var/hyperledger/orderer/msp"
+  ORDERER_GENERAL_TLS_ENABLED: "true"
+  ORDERER_GENERAL_TLS_PRIVATEKEY: "/var/hyperledger/orderer/tls/pair/tls.key"
+  ORDERER_GENERAL_TLS_CERTIFICATE: "/var/hyperledger/orderer/tls/pair/tls.crt"
+  ORDERER_GENERAL_TLS_ROOTCAS: "/var/hyperledger/orderer/tls/ca.crt"
+
+  # kafka 相关配置
+  {{- if eq .Values.orderer.ordererType "kafka" }}
+  ORDERER_KAFKA_RETRY_SHORTINTERVAL: {{ .Values.kafka.retryShortInterval }} 
+  ORDERER_KAFKA_RETRY_SHORTTOTAL: {{ .Values.kafka.retryShortTotal }}
+  ORDERER_KAFKA_VERBOSE: {{ .Values.kafka.verbose }}
+  ORDERER_KAFKA_TRY_LONGINTERVAL: {{ .Values.kafka.tryLongInterval }}
+  ORDERER_KAFKA_TRY_LONGTOTAL: {{ .Values.kafka.tryLongTotal }}
+  ORDERER_KAFKA_BROKERS: [kafka0:9092,kafka1:10092,kafka2:11092,kafka3:12092]
+  {{- end }}
+
+  # etcdraft
+  {{- if eq .Values.orderer.ordererType "etcdraft" }} 
+  ORDERER_GENERAL_CLUSTER_CLIENTCERTIFICATE: "/var/hyperledger/orderer/tls/pair/server.crt"
+  ORDERER_GENERAL_CLUSTER_CLIENTPRIVATEKEY: "/var/hyperledger/orderer/tls/pair/server.key"
+  ORDERER_GENERAL_CLUSTER_ROOTCAS: "/var/hyperledger/orderer/tls/ca.crt"
+  {{- end }}

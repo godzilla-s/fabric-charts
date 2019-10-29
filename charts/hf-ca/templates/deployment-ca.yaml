@@ -1,0 +1,82 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "hf-ca.fullname" . }}
+  labels:
+{{ include "hf-ca.labels" . | indent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "hf-ca.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "hf-ca.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+    {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- if .Values.ca.secret.cert }}
+      - name: ca-cert
+        secret:
+          secretName: {{ .Values.ca.secret.cert }}
+    {{- end }}
+    {{- if .Values.ca.secret.key }}
+      - name: ca-key
+        secret:
+          secretName: {{ .Values.ca.secret.key }}
+    {{- end }}
+      initContainers:
+        - name: wait-mysql
+          image: busybox
+          command: 
+            - sh 
+            - -c
+            - |
+              until nslookup {{ include "hf-ca.fullname" . }}-mysql; do 
+                echo "waiting for mysql"
+                sleep 2
+              done
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+            - sh 
+            - -c 
+            - |
+              fabric-ca-server start -b $FABRIC_CA_ADMIN_NAME:$FABRIC_CA_ADMIN_PASSWD 
+          ports:
+            - name: ca-port
+              containerPort: 7054
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: {{ include "hf-ca.fullname" . }}-ca-cm 
+          volumeMounts:
+          {{- if .Values.ca.secret.cert }}
+            - mountPath: /etc/hyperledger/fabric-ca-server-config/cert
+              name: ca-cert 
+          {{- end }}
+          {{- if .Values.ca.secret.key }}
+            - mountPath: /etc/hyperledger/fabric-ca-server-config/key
+              name: ca-key
+          {{- end }} 
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}

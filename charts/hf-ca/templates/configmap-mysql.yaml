@@ -1,0 +1,12 @@
+{{- if .Values.mysql.enabled }}
+apiVersion: v1
+kind: ConfigMap 
+metadata:
+  name: {{ include "hf-ca.fullname" . }}-mysql-cm 
+data:
+  MYSQL_ROOT_PASSWORD: {{ .Values.mysql.dbpwd | quote }}
+  MYSQL_DATABASE: {{ .Values.mysql.database | quote }}
+  mysql.cnf: |
+    [mysqld]
+    sql-mode=STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION
+{{- end }}

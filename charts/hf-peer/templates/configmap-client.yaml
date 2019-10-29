@@ -1,0 +1,19 @@
+{{- if .Values.client.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-client-cm
+data:
+  GOPATH: "/opt/gopath"
+  CORE_VM_ENDPOINT: "unix:///host/var/run/docker.sock"
+  FABRIC_LOGGING_SPEC: "INFO"
+  CORE_PEER_ID: {{ .Release.Name }}
+  CORE_PEER_ADDRESS: {{ include "hf-peer.peerid" . }}:7051
+  CORE_PEER_LOCALMSPID: {{ .Values.peer.mspID | quote }}
+  CORE_PEER_TLS_ENABLED: "true" 
+  CORE_PEER_TLS_CERT_FILE: "/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/tls/pair/tls.crt"
+  CORE_PEER_TLS_KEY_FILE: "/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/tls/pair/tls.key" 
+  CORE_PEER_TLS_ROOTCERT_FILE: "/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/tls/ca.crt" 
+  CORE_PEER_MSPCONFIGPATH: "/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/admin/msp" 
+  CA_FILE: "/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/tlsca-orderer-cert.pem" 
+{{- end }}

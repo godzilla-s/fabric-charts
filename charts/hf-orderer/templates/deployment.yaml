@@ -1,0 +1,130 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "hf-orderer.fullname" . }}
+  labels:
+{{ include "hf-orderer.labels" . | indent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "hf-orderer.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "hf-orderer.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+    {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      volumes:
+      {{- if .Values.orderer.genesisBlock }}
+        - name: genesis-block
+          secret:
+            secretName: {{ .Values.orderer.genesisBlock }}
+      {{- end }}
+      {{- if .Values.orderer.secret.ordererCert }}
+        - name: orderer-cert 
+          secret:
+            secretName: {{ .Values.orderer.secret.ordererCert }}
+      {{- end }}
+      {{- if .Values.orderer.secret.ordererKey }}
+        - name: orderer-key 
+          secret:
+            secretName: {{ .Values.orderer.secret.ordererKey }}
+      {{- end }}
+      {{- if .Values.orderer.secret.ordererRootCa }}
+        - name: orderer-root-ca
+          secret:
+            secretName: {{ .Values.orderer.secret.ordererRootCa }}
+      {{- end }}
+      {{- if .Values.orderer.secret.ordererRootTlsCa }}
+        - name: orderer-root-tlsca
+          secret: 
+            secretName: {{ .Values.orderer.secret.ordererRootTlsCa }}
+      {{- end }}
+      {{- if .Values.orderer.secret.ordererAdminCert }}
+        - name: orderer-admin-cert 
+          secret:
+            secretName: {{ .Values.orderer.secret.ordererAdminCert }}
+      {{- end }}
+      {{- if .Values.orderer.secret.ordererTlsPair }}
+        - name: orderer-tls-pair
+          secret:
+            secretName: {{ .Values.orderer.secret.ordererTlsPair }}
+      {{- end }}
+      {{- if .Values.orderer.secret.ordererTlsCa }}
+        - name: orderer-tls-crt
+          secret:
+            secretName: {{ .Values.orderer.secret.ordererTlsCa }}
+      {{- end }}
+      {{- if .Values.orderer.persistence.enabled }}
+        - name: orderer-persistent-vol
+          persistentVolumeClaim:
+            claimName: {{ include "hf-orderer.fullname" . }}-orderer-pvc
+      {{- end }}
+      containers:
+        - name: {{ .Release.Name }}-orderer
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: orderer-port
+              containerPort: 7050
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: {{ include "hf-orderer.fullname" . }}-orderer-cm
+          volumeMounts:
+          {{- if .Values.orderer.genesisBlock }}
+            - mountPath: /var/hyperledger/orderer
+              name: genesis-block 
+          {{- end }}
+          {{- if .Values.orderer.secret.ordererTlsPair }}
+            - mountPath: /var/hyperledger/orderer/tls/pair
+              name: orderer-tls-pair
+          {{- end }}
+          {{- if .Values.orderer.secret.ordererTlsCa }}
+            - mountPath: /var/hyperledger/orderer/tls
+              name: orderer-tls-crt
+          {{- end }}
+          {{- if .Values.orderer.secret.ordererCert }}
+            - mountPath: /var/hyperledger/orderer/msp/signcerts
+              name: orderer-cert 
+          {{- end }}
+          {{- if .Values.orderer.secret.ordererKey }}
+            - mountPath: /var/hyperledger/orderer/msp/keystore 
+              name: orderer-key 
+          {{- end }}
+          {{- if .Values.orderer.secret.ordererRootCa }}
+            - mountPath: /var/hyperledger/orderer/msp/cacerts
+              name: orderer-root-ca 
+          {{- end }}
+          {{- if .Values.orderer.secret.ordererRootTlsCa }}
+            - mountPath: /var/hyperledger/orderer/msp/tlscacerts
+              name: orderer-root-tlsca 
+          {{- end }}
+          {{- if .Values.orderer.secret.ordererAdminCert }}
+            - mountPath: /var/hyperledger/orderer/msp/admincerts
+              name: orderer-admin-cert 
+          {{- end }}
+          {{- if .Values.orderer.persistence.enabled }}
+            - mountPath: /var/hyperledger/production/orderer
+              name: orderer-persistent-vol
+          {{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}

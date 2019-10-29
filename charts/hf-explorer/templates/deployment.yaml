@@ -1,0 +1,106 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "hf-explorer.fullname" . }}
+  labels:
+{{ include "hf-explorer.labels" . | indent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "hf-explorer.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "hf-explorer.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+    {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      volumes:
+        - name: config-json
+          configMap:
+            name: {{ include "hf-explorer.fullname" . }}-cm
+            items: 
+              - key: config-file
+                path: config.json
+        - name: network-config
+          secret:
+            secretName: {{ .Values.secrets.networkConfig }}
+        {{- if .Values.persistence.enabled }}
+        - name: crypto-base
+          persistentVolumeClaim:
+            claimName: {{ include "hf-explorer.fullname" . }}-pvc
+        {{- end }}
+        {{- range $tag, $value := .Values.secrets.orgSecrets }}
+        - name: {{ $tag }}-adminkey
+          secret:
+            secretName: {{ $value.adminKey }}
+        - name: {{ $tag }}-admincert
+          secret:
+            secretName: {{ $value.adminCert }}
+        - name: {{ $tag }}-tlscacert
+          secret:
+            secretName: {{ $value.tlsCaCert }}
+        {{- end }}
+      initContainers:
+        - name: wait-pg
+          image: busybox
+          command: 
+            - sh 
+            - -c
+            - |
+              until nslookup {{ include "hf-explorer.fullname" . }}-pg; do 
+                echo "waiting for postgresql"
+                sleep 2
+              done
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: 
+            - sh 
+            - -c 
+            - |
+              node /opt/explorer/main.js && tail -f /dev/null
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          envFrom:
+            - configMapRef: 
+                name: {{ include "hf-explorer.fullname" . }}-cm
+          volumeMounts:
+            - mountPath: /opt/explorer/app/platform/fabric/config
+              name: config-json
+            - mountPath: /opt/explorer/app/platform/fabric/connection-profile
+              name: network-config
+            {{- if .Values.persistence.enabled }}
+            - mountPath: /tmp/crypto
+              name: crypto-base
+            {{- end }}
+            {{- range $tag, $v := .Values.secrets.orgSecrets }}
+            - mountPath: /tmp/crypto/{{ $tag }}-crypto/admin/keystore/
+              name: {{ $tag }}-adminkey
+            - mountPath: /tmp/crypto/{{ $tag }}-crypto/admin/signcerts/
+              name: {{ $tag }}-admincert
+            - mountPath: /tmp/crypto/{{ $tag }}-crypto/tls/
+              name: {{ $tag }}-tlscacert
+            {{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}

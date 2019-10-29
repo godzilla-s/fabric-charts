@@ -1,0 +1,129 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "hf-peer.fullname" . }}
+  labels:
+{{ include "hf-peer.labels" . | indent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "hf-peer.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "hf-peer.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+    {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      volumes:
+        - name: dockersocket
+          hostPath:
+            path: {{ .Values.dockersocketPath }}
+      {{- if .Values.peer.secret.peerCert }}
+        - name: peer-cert
+          secret:
+            secretName: {{ .Values.peer.secret.peerCert }}
+      {{- end }}
+      {{- if .Values.peer.secret.peerKey }}
+        - name: peer-key
+          secret:
+            secretName: {{ .Values.peer.secret.peerKey }}
+      {{- end }}
+      {{- if .Values.peer.secret.peerRootCa }}
+        - name: peer-root-ca
+          secret:
+            secretName: {{ .Values.peer.secret.peerRootCa }}
+      {{- end }}
+      {{- if .Values.peer.secret.peerRootTlsCa }}
+        - name: peer-root-tlsca
+          secret:
+            secretName: {{ .Values.peer.secret.peerRootTlsCa }}
+      {{- end }}
+      {{- if .Values.peer.secret.peerAdminCert }}
+        - name: peer-admin-cert
+          secret:
+            secretName: {{ .Values.peer.secret.peerAdminCert }}
+      {{- end }}
+      {{- if .Values.peer.secret.peerTls }}
+        - name: peer-tls
+          secret:
+            secretName: {{ .Values.peer.secret.peerTls }}
+      {{- end }}
+      {{- if .Values.peer.secret.peerTlsCa }}
+        - name: peer-tls-ca
+          secret:
+            secretName: {{ .Values.peer.secret.peerTlsCa }}
+      {{- end }}
+      {{- if .Values.peer.persistence.enabled }}
+        - name: persistence-volume
+          persistentVolumeClaim:
+            claimName: {{ include "hf-peer.fullname" . }}-peer-pvc
+      {{- end }}
+      containers:
+        - name: {{ .Release.Name }}-peer
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: request
+              containerPort: 7051
+              protocol: TCP
+            - name: event
+              containerPort: 7053
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: {{  include "hf-peer.fullname" . }}-peer-cm
+          volumeMounts:
+            - mountPath: /host/var/run/docker.sock
+              name: dockersocket
+          {{- if .Values.peer.secret.peerCert }}
+            - mountPath: /etc/hyperledger/fabric/peer/msp/signcerts
+              name: peer-cert
+          {{- end }}
+          {{- if .Values.peer.secret.peerKey }}
+            - mountPath: /etc/hyperledger/fabric/peer/msp/keystore
+              name: peer-key
+          {{- end }}
+          {{- if .Values.peer.secret.peerRootCa }}
+            - mountPath: /etc/hyperledger/fabric/peer/msp/cacerts
+              name: peer-root-ca
+          {{- end }}
+          {{- if .Values.peer.secret.peerRootTlsCa }}
+            - mountPath: /etc/hyperledger/fabric/peer/msp/tlscacerts
+              name: peer-root-tlsca
+          {{- end }}
+          {{- if .Values.peer.secret.peerAdminCert }}
+            - mountPath: /etc/hyperledger/fabric/peer/msp/admincerts
+              name: peer-admin-cert
+          {{- end }}
+          {{- if .Values.peer.secret.peerTls }}
+            - mountPath: /etc/hyperledger/fabric/tls/pair
+              name: peer-tls 
+          {{- end }}
+          {{- if .Values.peer.secret.peerTlsCa }}
+            - mountPath: /etc/hyperledger/fabric/tls
+              name: peer-tls-ca
+          {{- end }}
+          {{- if .Values.peer.persistence.enabled }}
+            - mountPath: /var/hyperledger/production
+              name: persistence-volume
+          {{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}

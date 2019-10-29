@@ -1,0 +1,14 @@
+{{- if .Values.client.persistence.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "hf-peer.fullname" . }}-client-pvc
+  labels: 
+spec:
+  accessModes:
+    - {{ .Values.client.persistence.accessMode }}
+  resources:
+    requests:
+      storage: {{ .Values.client.persistence.size }}
+  storageClassName: {{ .Values.client.persistence.storageClass }}
+{{- end }}

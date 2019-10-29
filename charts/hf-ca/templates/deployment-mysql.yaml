@@ -1,0 +1,59 @@
+{{- if .Values.mysql.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "hf-ca.fullname" . }}-mysql
+  labels:
+{{ include "hf-ca.labels" . | indent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "hf-ca.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "hf-ca.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+    {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      volumes:
+      - name: mysql-conf
+        configMap:
+          name: {{ include "hf-ca.fullname" . }}-mysql-cm 
+          items:
+          - key: mysql.cnf
+            path: mysqld.cnf
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.mysql.image }}:{{ .Values.mysql.tag }}"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: mysql-port
+              containerPort: 3306
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: {{ include "hf-ca.fullname" . }}-mysql-cm
+          volumeMounts:
+            - mountPath: /etc/mysql/mysql.conf.d
+              name: mysql-conf  
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+{{- end }}

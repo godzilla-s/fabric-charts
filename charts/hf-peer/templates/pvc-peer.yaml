@@ -1,0 +1,16 @@
+{{- if .Values.peer.persistence.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "hf-peer.fullname" . }}-peer-pvc
+  labels: 
+spec:
+  accessModes:
+    - {{ .Values.peer.persistence.accessMode }}
+  resources:
+    requests:
+      storage: {{ .Values.peer.persistence.size }}
+  storageClassName: {{ .Values.peer.persistence.storageClass }}
+{{- end }}
+
+# 建议最好使用nfs

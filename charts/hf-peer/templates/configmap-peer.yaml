@@ -1,0 +1,45 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "hf-peer.fullname" . }}-peer-cm
+data:
+  CORE_PEER_ID: {{ include "hf-peer.peerid" . }}
+  CORE_PEER_NETWORKID: dev 
+  # CORE_PEER_ADDRESS: {{ include "hf-peer.peerid" . }}:7051
+  CORE_PEER_LISTENADDRESS: 0.0.0.0:7051
+  # CORE_PEER_CHAINCODEADDRESS: {{ include "hf-peer.peerid" . }}:7052
+  CORE_PEER_CHAINCODELISTENADDRESS: 0.0.0.0:7052
+  # CORE_PEER_GOSSIP_EXTERNALENDPOINT: {{ include "hf-peer.peerid" . }}:7051
+  CORE_PEER_LOCALMSPID: {{ .Values.peer.mspID | quote }}
+  CORE_VM_ENDPOINT: "unix:///host/var/run/docker.sock"
+  FABRIC_LOGGING_SPEC: {{ .Values.peer.loglevel | quote }}
+  CORE_PEER_TLS_ENABLED: "true" 
+  # set election way
+  CORE_PEER_GOSSIP_USELEADERELECTION: "false" 
+  CORE_PEER_GOSSIP_ORGLEADER: "true"  
+  CORE_PEER_PROFILE_ENABLED: "true"
+  CORE_PEER_MSPCONFIGPATH: "/etc/hyperledger/fabric/peer/msp"
+  # peer node cert and key, must be exist when start
+  CORE_PEER_TLS_CERT_FILE: "/etc/hyperledger/fabric/tls/pair/tls.crt"
+  CORE_PEER_TLS_KEY_FILE: "/etc/hyperledger/fabric/tls/pair/tls.key"
+  CORE_PEER_TLS_ROOTCERT_FILE: "/etc/hyperledger/fabric/tls/ca.crt" 
+
+  # ccenv setting
+  CORE_CHAINCODE_LOGGING_SHIM: {{ .Values.peer.ccenv.loglevel }}
+  CORE_CHAINCODE_LOGGING_LEVEL: {{ .Values.peer.ccenv.loglevel }}
+  {{- if ne .Values.peer.chaincode.builder "" }}
+  CORE_CHAINCODE_BUILDER: {{ .Values.peer.chaincode.builder }}
+  {{- end }}
+  {{- if ne .Values.peer.chaincode.runtime "" }}
+  CORE_CHAINCODE_GOLANG_RUNTIME: {{ .Values.peer.chaincode.runtime }}
+  {{- end }}
+  {{- if ne .Values.peer.chaincode.execTimeout "" }}
+  CORE_CHAINCODE_EXECUTETIMEOUT: {{ .Values.peer.chaincode.execTimeout }}
+  {{- end }}
+  # if use couchdb 
+  {{- if .Values.couchdb.enabled }}
+  CORE_LEDGER_STATE_STATEDATABASE: "CouchDB"
+  CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS: {{ include "hf-peer.fullname" . }}-couchdb:5984 
+  CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME: ""
+  CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD: ""
+  {{- end }}

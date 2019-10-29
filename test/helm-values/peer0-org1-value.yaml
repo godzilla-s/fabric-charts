@@ -1,0 +1,109 @@
+# Default values for hf-peer.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+image:
+  repository: hyperledger/fabric-peer
+  tag: 1.4.2
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+
+nameOverride: ""
+fullnameOverride: "peer0-org1"
+
+dockersocketPath: /var/run/docker.sock
+
+service:
+  type: ClusterIP
+  portRequest: 7051
+  portEvent: 7053
+  portCouchDB: 5984
+
+ingress:
+  enabled: false
+  annotations: {}
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  hosts:
+    - host: hyperledger.fabric-peer.local
+      paths: []
+
+  tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
+
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+peer:
+  mspID: "Org1MSP"
+  loglevel: "DEBUG"  # INFO,DEBUG,WARN,ERROR
+  secret: 
+    peerCert: "hlf-org1-peer0-idcert"  # peer msp signcert
+    peerKey: "hlf-org1-peer0-idkey"    # peer msp keystore
+    peerRootCa: "hlf-org1-peer0-root-ca" # peer msp cacert
+    peerRootTlsCa: "hlf-org1-peer0-root-tlsca"  # peer msp tlscacert
+    peerAdminCert: "hlf-org1-peer0-admin-cert"  # peer msp admincert
+    peerTls: "hlf-org1-peer0-tls-pair"  # peer tls cert and key
+    peerTlsCa: "hlf-org1-peer0-tls-ca"  # peer tls cacert 
+  gossip:
+    userLeaderElection: false 
+  ccenv:
+    loglevel: "DEBUG"
+    ccBuilder: "hyperledger/fabric-ccenv:1.4.2"  # chaincode builder image
+    ccRuntime: "hyperledger/fabric-baseos:0.4.15"  # chaincode runtime image 
+    ccExecTimeout: 120s  
+  # persistence storage for peer 
+  persistence:
+    enabled: false 
+    storageClass: ""
+    accessMode: ReadOnlyMany
+    size: 1Gi
+
+client:
+  enabled: true  
+  image: hyperledger/fabric-tools
+  tag: 1.4.2
+  channeltx: "hlf-channel-tx"  # channel tx file
+  secret:
+    ordererTlsCa: "hlf-orderer-tlsca"
+    userCert: "hlf-org1-admin-cert"
+    userKey: "hlf-org1-admin-key"
+    userRootCa: "hlf-org1-admin-ca"
+    userRootTlsCa: "hlf-org1-admin-tlsca"
+    userAdminCert: "hlf-org1-admin-cert"
+  persistence:  # for store chaincode source files
+    enabled: true 
+    storageClass: "chaincodepv"
+    accessMode: ReadOnlyMany
+    size: 1Gi
+
+# if peer use couchdb to storage, please set as following
+couchdb:
+  enabled: false
+  image: hyperledger/fabric-couchdb
+  tag: 0.4.15 
+  persistence:
+    enabled: false 
+    storageClass: ""
+    accessMode: ReadOnlyMany
+    size: 1Gi
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
