@@ -15,12 +15,12 @@ data:
   FABRIC_CA_IMD_CA_URL: {{ .Values.ca.imdca.url }}
   {{- end }}
   # mysql setting
-  {{- if .Values.mysql.enabled }}
+  {{- if .Values.storage.mysql.enabled }}
   FABRIC_CA_SERVER_DB_TYPE: "mysql"
-  FABRIC_CA_SERVER_DB_DATASOURCE: "root:{{ .Values.mysql.dbpwd }}@tcp({{ include "hf-ca.fullname" . }}-mysql:3306)/{{ .Values.mysql.database }}?parseTime=true"
+  FABRIC_CA_SERVER_DB_DATASOURCE: "root:{{ .Values.storage.mysql.passwd }}@tcp({{ include "hf-ca.fullname" . }}-mysql:3306)/{{ .Values.storage.mysql.database }}?parseTime=true"
   {{- end }}
   # postgres setting 
-  {{- if .Values.pg.enabled }}
+  {{- if .Values.storage.pg.enabled }}
   FABRIC_CA_SERVER_DB_TYPE: "postgres"
-  FABRIC_CA_SERVER_DB_DATASOURCE: "host={{ include "hf-ca.fullname" . }}-mysql port=5432 user=Username password={{ .Values.pg.dbpwd }} dbname={{ .Values.pg.database }} sslmode=verify-full"
+  FABRIC_CA_SERVER_DB_DATASOURCE: "host={{ include "hf-ca.fullname" . }}-mysql port=5432 user=Username password={{ .Values.storage.pg.dbpwd }} dbname={{ .Values.storage.pg.database }} sslmode=verify-full"
   {{- end }}

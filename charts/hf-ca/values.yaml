@@ -56,27 +56,38 @@ ca:
   allowRemoveAffiliation: true 
   allowRemoveIdentity: true 
 
-persistence:
-  enabled: false 
-  storageClass: ""
-  accessMode: ""
-  size: ""
-
-mysql:
-  enabled: false  # if set true, pg.enabled should be false 
-  image: "mysql"
-  tag: "5.7.20"  # 5.7 or later
-  port: 3306 
-  database: "fabric_ca"  # create database when server start
-  dbpwd: ""
-
-pg:
-  enabled: false  # if set true, mysql.enabled should be false 
-  image: "postgres"
-  tag: ""  # 9.5.5 or later
-  port: 5432
-  database: "fabric_ca" 
-  dbpwd: ""
+# CA storage type 
+storage: 
+  leveldb:  # default
+    persistence:
+      enabled: false 
+      storageClass: ""
+      accessMode: ""
+      size: ""
+  mysql:
+    enabled: false  # if set true, pg.enabled should be false 
+    image: "mysql"
+    tag: "5.7.20"  # 5.7 or later
+    port: 3306 
+    database: "fabric_ca"  # create database when server start
+    passwd: ""
+    persistence:
+      enabled: false 
+      storageClass: ""
+      accessMode: ""
+      size: ""
+  pg:
+    enabled: false  # if set true, mysql.enabled should be false 
+    image: "postgres"
+    tag: ""  # 9.5.5 or later
+    port: 5432
+    database: "fabric_ca" 
+    passwd: ""
+    persistence:
+      enabled: false 
+      storageClass: ""
+      accessMode: ""
+      size: ""
 
 nodeSelector: {}
 

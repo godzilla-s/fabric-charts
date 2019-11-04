@@ -1,2 +1,2 @@
-{{- if .Values.pg.enabled }}
+{{- if .Values.storage.pg.enabled }}
 {{- end }}

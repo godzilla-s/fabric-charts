@@ -1,4 +1,4 @@
-{{- if .Values.mysql.enabled }}
+{{- if .Values.storage.mysql.enabled }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -30,7 +30,7 @@ spec:
             path: mysqld.cnf
       containers:
         - name: {{ .Chart.Name }}
-          image: "{{ .Values.mysql.image }}:{{ .Values.mysql.tag }}"
+          image: "{{ .Values.storage.mysql.image }}:{{ .Values.storage.mysql.tag }}"
           imagePullPolicy: IfNotPresent
           ports:
             - name: mysql-port

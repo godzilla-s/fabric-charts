@@ -63,6 +63,7 @@ orderer:
 
 # when orderer.ordererType set to 'kafka', the follow are available
 kafka:
+  enabled: false 
   image: ""
   tag: ""
   retryShortInterval: 1s

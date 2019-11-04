@@ -8,7 +8,7 @@ metadata:
 spec:
   type: {{ .Values.service.type }}
   ports:
-    - port: {{ .Values.pg.port }}
+    - port: {{ .Values.storage.pg.port }}
       targetPort: 5432
       protocol: TCP
       name: mysql-port

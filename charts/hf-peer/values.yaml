@@ -95,8 +95,8 @@ couchdb:
   enabled: false 
   image: hyperledger/fabric-couchdb
   tag: 0.4.15 
-  couchUser: ""  # couchdb username
-  couchPwd: ""  #couchdb password
+  username: ""  # couchdb username
+  password: ""  #couchdb password
   persistence:
     enabled: false 
     storageClass: ""
