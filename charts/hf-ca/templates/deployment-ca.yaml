@@ -30,6 +30,7 @@ spec:
         secret:
           secretName: {{ .Values.ca.secret.key }}
     {{- end }}
+    {{- if .Values.storage.mysql.enabled }}
       initContainers:
         - name: wait-mysql
           image: busybox
@@ -41,6 +42,7 @@ spec:
                 echo "waiting for mysql"
                 sleep 2
               done
+    {{- end }}
       containers:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
